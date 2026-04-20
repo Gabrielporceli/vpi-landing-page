@@ -3,11 +3,11 @@ import logo from "../../assets/logo.png";
 
 const maskStyle = {
   WebkitMaskImage: `url('${logo}')`,
-  WebkitMaskSize: '85%', 
+  WebkitMaskSize: '50%',
   WebkitMaskPosition: 'center',
   WebkitMaskRepeat: 'no-repeat',
   maskImage: `url('${logo}')`,
-  maskSize: '85%',
+  maskSize: '50%',
   maskPosition: 'center',
   maskRepeat: 'no-repeat',
 } as const;
@@ -43,6 +43,7 @@ const FlickeringGridDemo = () => {
         className="absolute inset-0 z-10"
         style={{
           ...maskStyle,
+          top: '76px',
           animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         }}
       >

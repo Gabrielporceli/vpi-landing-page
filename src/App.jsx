@@ -1,11 +1,73 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import logo from './assets/logo.png';
 import { FlickeringGridDemo } from './components/ui/demo.jsx';
+
+const INDICADOR = 'template';
+const WEBHOOK_URL = 'https://webhook.gabrielporceli.com.br/webhook/iNDICACAO';
 
 const App = () => {
   const [form, setForm] = useState({ name: '', phone: '', email: '', segment: '', need: '' });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sendError, setSendError] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const SEGMENTS = [
+    'E-commerce / Loja online',
+    'Prestação de serviços',
+    'Infoprodutos / Digital',
+    'Varejo físico',
+    'Outro',
+  ];
+
+  const STATS = [
+    { prefix: '',  value: 94,  suffix: '%',  label: 'clientes satisfeitos' },
+    { prefix: '',  value: 3,   suffix: 'x',  label: 'crescimento médio' },
+    { prefix: '+', value: 200, suffix: '',   label: 'projetos entregues' },
+    { prefix: '',  value: 4.9, suffix: '★',  label: 'avaliação média' },
+  ];
+  const [counts, setCounts] = useState(STATS.map(() => 0));
+  const proofRef = useRef(null);
+  const animated = useRef(false);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  useEffect(() => {
+    const el = proofRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || animated.current) return;
+      animated.current = true;
+      STATS.forEach((stat, i) => {
+        const duration = 1200;
+        const steps = 60;
+        const interval = duration / steps;
+        const isDecimal = !Number.isInteger(stat.value);
+        let step = 0;
+        const timer = setInterval(() => {
+          step++;
+          const progress = step / steps;
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const current = isDecimal
+            ? parseFloat((eased * stat.value).toFixed(1))
+            : Math.round(eased * stat.value);
+          setCounts(prev => { const next = [...prev]; next[i] = current; return next; });
+          if (step >= steps) clearInterval(timer);
+        }, interval);
+      });
+    }, { threshold: 0.4 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -28,14 +90,47 @@ const App = () => {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // TODO: integrar com webhook/API de envio
-    setTimeout(() => {
-      setLoading(false);
+    setSendError(false);
+
+    const payload = {
+      indicador: INDICADOR,
+      nome: form.name,
+      whatsapp: form.phone,
+      segmento: form.segment,
+      necessidade: form.need,
+      data: new Date().toISOString(),
+    };
+
+    // Salva localmente como backup antes de enviar
+    try {
+      const backlog = JSON.parse(localStorage.getItem('vpi_backlog') || '[]');
+      backlog.push(payload);
+      localStorage.setItem('vpi_backlog', JSON.stringify(backlog));
+    } catch (_) {}
+
+    // Tenta enviar com até 3 tentativas
+    let success = false;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) { success = true; break; }
+      } catch (_) {}
+      if (attempt < 2) await new Promise(r => setTimeout(r, 1500));
+    }
+
+    setLoading(false);
+    if (success) {
       setSubmitted(true);
-    }, 1200);
+    } else {
+      setSendError(true);
+    }
   };
 
   return (
@@ -58,7 +153,7 @@ const App = () => {
         <FlickeringGridDemo />
 
         {/* Hero Content Overlay */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingTop: '76px' }}>
           <div className="container" style={{ textAlign: 'center' }}>
             <div className="hero-tag" style={{ justifyContent: 'center', marginBottom: '32px' }}>
               <div style={{ width: '28px', height: '0.5px', backgroundColor: '#7758DB' }} />
@@ -84,31 +179,28 @@ const App = () => {
       </section>
 
       {/* PROOF BAR */}
-      <section style={{
+      <section ref={proofRef} style={{
         borderTop: '0.5px solid rgba(0,0,0,0.06)',
         borderBottom: '0.5px solid rgba(0,0,0,0.06)',
         marginBottom: '80px'
       }}>
         <div className="container proof-bar" style={{ padding: '0' }}>
-          {[
-            { n: '94%',  l: 'clientes satisfeitos' },
-            { n: '3x',   l: 'crescimento médio' },
-            { n: '+200', l: 'projetos entregues' },
-            { n: '4.9★', l: 'avaliação média' },
-          ].map((item, i) => (
+          {STATS.map((stat, i) => (
             <div
               key={i}
               className="proof-item reveal"
               data-delay={String(i + 1)}
               style={{
                 flex: 1,
-                padding: '28px 48px',
+                padding: '32px 48px',
                 borderRight: i < 3 ? '0.5px solid rgba(0,0,0,0.06)' : 'none',
-                textAlign: i === 0 ? 'left' : i === 3 ? 'right' : 'center',
+                textAlign: 'center',
               }}
             >
-              <div style={{ fontSize: '28px', fontWeight: 500, color: '#7758DB', marginBottom: '4px' }}>{item.n}</div>
-              <div style={{ fontSize: '12px', color: '#6A6A60', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.l}</div>
+              <div className="proof-number">
+                {stat.prefix}{counts[i]}{stat.suffix}
+              </div>
+              <div className="proof-label">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -125,12 +217,12 @@ const App = () => {
           <div className="left-col">
             <span className="section-label reveal reveal--left">Como funciona</span>
             <h2 className="reveal" data-delay="1" style={{ fontSize: '28px', marginBottom: '24px' }}>
-              Do convite ao resultado — em 3 passos simples.
+              Do convite ao resultado em 3 passos simples.
             </h2>
 
             <p className="reveal" data-delay="2" style={{ fontSize: '16px', color: '#6A6A60', marginBottom: '48px', maxWidth: '540px' }}>
-              O método VPI garante que cada pessoa que entra aqui já chega com contexto, intenção e{' '}
-              <span style={{ color: '#161616', fontWeight: 500 }}>prioridade no atendimento</span>.
+              O convite de indicação garante que cada pessoa que entra aqui receba uma análise diagnóstica de{' '}
+              <span style={{ color: '#161616', fontWeight: 500 }}>o que podemos automatizar</span>.
               {' '}Sem fila. Sem formulário frio. Você foi apresentado por alguém que já conhece o trabalho.
             </p>
 
@@ -170,7 +262,7 @@ const App = () => {
             {/* TESTIMONIAL */}
             <div className="testimonial-card reveal reveal--scale" data-delay="2">
               <p style={{ fontStyle: 'italic', fontSize: '16px', marginBottom: '24px', color: '#161616' }}>
-                "Fui indicado por um amigo e já cheguei com outra expectativa. O atendimento foi totalmente diferente — parecia que já me conheciam antes da primeira conversa."
+                "Vim por indicação de um amigo, cheguei sem muitas expectativas. O atendimento foi um grande diferencial esses meninos são outro nível. Parecia que já conheciam a minha empresa antes da primeira conversa."
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{
@@ -195,7 +287,7 @@ const App = () => {
 
           {/* RIGHT COLUMN — FORM */}
           <div id="contact-form" className="sticky-col reveal reveal--scale" data-delay="3" style={{ position: 'sticky', top: '100px', alignSelf: 'start' }}>
-            <div style={{ background: '#161616', borderRadius: '16px', padding: '40px 36px', color: '#F4F4F4' }}>
+            <div className="form-card" style={{ background: '#161616', borderRadius: '16px', padding: '40px 36px', color: '#F4F4F4' }}>
 
               {submitted ? (
                 <div className="fade-in" style={{ textAlign: 'center', padding: '40px 0' }}>
@@ -223,7 +315,7 @@ const App = () => {
                     Vamos conversar sobre o seu projeto
                   </h3>
                   <p style={{ fontSize: '14px', color: '#6A6A60', marginBottom: '32px' }}>
-                    Preencha abaixo e entraremos em contato em até 24 horas.
+                    Preencha abaixo e entraremos em contato em até 2 horas.
                   </p>
 
                   <form onSubmit={handleSubmit}>
@@ -237,27 +329,99 @@ const App = () => {
                       <input type="tel" name="phone" placeholder="(00) 00000-0000" required value={form.phone} onChange={handleChange} />
                     </div>
 
-                    <div className="form-group">
-                      <label>E-mail</label>
-                      <input type="email" name="email" placeholder="seu@email.com" required value={form.email} onChange={handleChange} />
-                    </div>
-
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '32px 0' }}>
                       <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
                       <span style={{ fontSize: '10px', color: '#8A8880', textTransform: 'uppercase', letterSpacing: '0.1em' }}>sobre você</span>
                       <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
                     </div>
 
-                    <div className="form-group">
+                    <div className="form-group" ref={dropdownRef} style={{ position: 'relative' }}>
                       <label>Qual é o seu negócio?</label>
-                      <select name="segment" required value={form.segment} onChange={handleChange}>
-                        <option value="" disabled>Selecione uma opção</option>
-                        <option value="E-commerce">E-commerce / Loja online</option>
-                        <option value="Serviços">Prestação de serviços</option>
-                        <option value="Digital">Infoprodutos / Digital</option>
-                        <option value="Varejo">Varejo físico</option>
-                        <option value="Outro">Outro</option>
-                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setDropdownOpen(o => !o)}
+                        style={{
+                          width: '100%',
+                          padding: '14px 16px',
+                          background: '#1E1E1E',
+                          border: `1px solid ${dropdownOpen ? '#7758DB' : 'rgba(255,255,255,0.1)'}`,
+                          borderRadius: '8px',
+                          color: form.segment ? '#F4F4F4' : '#6A6A60',
+                          fontSize: '14px',
+                          fontFamily: 'inherit',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          boxShadow: dropdownOpen ? '0 0 0 3px rgba(119,88,219,0.15)' : 'none',
+                          transition: 'border-color 0.2s, box-shadow 0.2s',
+                        }}
+                      >
+                        <span>{form.segment || 'Selecione uma opção'}</span>
+                        <svg
+                          width="16" height="16" viewBox="0 0 16 16" fill="none"
+                          style={{ transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease', flexShrink: 0 }}
+                        >
+                          <path d="M4 6l4 4 4-4" stroke="#6A6A60" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+
+                      {dropdownOpen && (
+                        <ul style={{
+                          position: 'absolute',
+                          top: 'calc(100% + 6px)',
+                          left: 0,
+                          right: 0,
+                          background: '#1E1E1E',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          zIndex: 100,
+                          listStyle: 'none',
+                          padding: '4px',
+                          boxShadow: '0 16px 40px rgba(0,0,0,0.4)',
+                          animation: 'dropdownIn 0.18s cubic-bezier(0.25,0.46,0.45,0.94) both',
+                        }}>
+                          {SEGMENTS.map((seg) => (
+                            <li key={seg}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setForm(prev => ({ ...prev, segment: seg }));
+                                  setDropdownOpen(false);
+                                }}
+                                style={{
+                                  width: '100%',
+                                  padding: '10px 14px',
+                                  background: form.segment === seg ? 'rgba(119,88,219,0.15)' : 'transparent',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  color: form.segment === seg ? '#7758DB' : '#C0C0B8',
+                                  fontSize: '14px',
+                                  fontFamily: 'inherit',
+                                  textAlign: 'left',
+                                  cursor: 'pointer',
+                                  transition: 'background 0.15s, color 0.15s',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '10px',
+                                }}
+                                onMouseEnter={e => { if (form.segment !== seg) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+                                onMouseLeave={e => { if (form.segment !== seg) e.currentTarget.style.background = 'transparent'; }}
+                              >
+                                {form.segment === seg && (
+                                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                    <path d="M2 6l3 3 5-5" stroke="#7758DB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                )}
+                                {form.segment !== seg && <span style={{ width: '12px', display: 'inline-block' }} />}
+                                {seg}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
 
                     <div className="form-group">
@@ -273,8 +437,29 @@ const App = () => {
                       />
                     </div>
 
-                    <button type="submit" className="btn-primary" disabled={loading}>
-                      {loading ? 'Enviando...' : 'Quero ser atendido →'}
+                    {sendError && (
+                      <div style={{ background: 'rgba(220,60,60,0.1)', border: '1px solid rgba(220,60,60,0.25)', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                        <span style={{ fontSize: '16px', flexShrink: 0 }}>⚠️</span>
+                        <div>
+                          <p style={{ fontSize: '13px', color: '#F4A0A0', fontWeight: 500, marginBottom: '2px' }}>Falha no envio</p>
+                          <p style={{ fontSize: '12px', color: '#A08080', lineHeight: 1.5 }}>Seus dados foram salvos localmente. Tente novamente ou entre em contato diretamente pelo WhatsApp.</p>
+                        </div>
+                      </div>
+                    )}
+
+                    <button type="submit" className="btn-primary btn-cta" disabled={loading}>
+                      {loading ? (
+                        <span className="btn-cta__loading">
+                          <span className="btn-cta__dot" />
+                          <span className="btn-cta__dot" />
+                          <span className="btn-cta__dot" />
+                        </span>
+                      ) : (
+                        <span className="btn-cta__label">
+                          Quero ser atendido
+                          <span className="btn-cta__arrow">→</span>
+                        </span>
+                      )}
                     </button>
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '20px' }}>

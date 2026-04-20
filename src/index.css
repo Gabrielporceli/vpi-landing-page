@@ -161,6 +161,24 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
 }
 
+.form-card input,
+.form-card textarea {
+  background: #1E1E1E;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #F4F4F4;
+}
+
+.form-card input::placeholder,
+.form-card textarea::placeholder {
+  color: #6A6A60;
+}
+
+.form-card input:focus,
+.form-card textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(119, 88, 219, 0.15);
+}
+
 label {
   display: block;
   font-size: 12px;
@@ -225,17 +243,134 @@ label {
   cursor: not-allowed;
 }
 
+/* ── CTA Button ─────────────────────────────────────── */
+.btn-cta {
+  background: linear-gradient(135deg, #7758DB 0%, #9B7AFF 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 0 0 0 rgba(119, 88, 219, 0);
+  transition:
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.35s ease,
+    opacity 0.2s ease !important;
+}
+
+.btn-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #9B7AFF 0%, #7758DB 100%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.btn-cta:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.btn-cta:hover:not(:disabled) {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 32px rgba(119, 88, 219, 0.45), 0 0 0 1px rgba(119,88,219,0.3) !important;
+}
+
+.btn-cta:active:not(:disabled) {
+  transform: translateY(-1px) scale(0.98) !important;
+  box-shadow: 0 4px 16px rgba(119, 88, 219, 0.35) !important;
+}
+
+.btn-cta__label {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-cta__arrow {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-cta:hover:not(:disabled) .btn-cta__arrow {
+  transform: translateX(5px);
+}
+
+.btn-cta__loading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.btn-cta__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.8);
+  animation: dotPulse 1.2s ease-in-out infinite;
+}
+
+.btn-cta__dot:nth-child(2) { animation-delay: 0.2s; }
+.btn-cta__dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+  0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+  40%            { transform: scale(1);   opacity: 1; }
+}
+
 /* ── Proof Bar ──────────────────────────────────────── */
 .proof-bar {
   display: flex;
 }
 
 .proof-item {
-  transition: background 0.25s ease;
+  position: relative;
+  transition: background 0.3s ease;
+  overflow: hidden;
+}
+
+.proof-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), left 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  opacity: 0.5;
 }
 
 .proof-item:hover {
   background: rgba(var(--accent-rgb), 0.03);
+}
+
+.proof-item:hover::after {
+  width: 100%;
+  left: 0;
+}
+
+.proof-number {
+  font-size: 36px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.2s ease;
+}
+
+.proof-item:hover .proof-number {
+  transform: scale(1.06);
+}
+
+.proof-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
 }
 
 /* ── Steps ──────────────────────────────────────────── */
@@ -309,6 +444,11 @@ label {
 .reveal[data-delay="5"] { transition-delay: 0.46s; }
 
 /* ── Keyframes ──────────────────────────────────────── */
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
