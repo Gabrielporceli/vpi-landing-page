@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import logo from './assets/logo.png';
-import { FlickeringGridDemo } from './components/ui/demo';
+import { FlickeringGridDemo } from './components/ui/demo.jsx';
 
 const App = () => {
   const [form, setForm] = useState({ name: '', phone: '', email: '', segment: '', need: '' });
@@ -51,7 +51,7 @@ const App = () => {
         <FlickeringGridDemo />
         
         {/* Hero Content Overlay */}
-        <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
+        <div className="absolute inset-0 z-20 pointer-events-none flex flex-col items-center justify-center">
           <div className="container" style={{ textAlign: 'center' }}>
             <div className="hero-tag" style={{ justifyContent: 'center', marginBottom: '32px' }}>
               <div style={{ width: '28px', height: '0.5px', backgroundColor: '#7758DB' }} />

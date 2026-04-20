@@ -3,19 +3,18 @@ import logo from "../../assets/logo.png";
 
 const maskStyle = {
   WebkitMaskImage: `url('${logo}')`,
-  WebkitMaskSize: 'contain', 
+  WebkitMaskSize: 'contain',
   WebkitMaskPosition: 'center',
   WebkitMaskRepeat: 'no-repeat',
   maskImage: `url('${logo}')`,
   maskSize: 'contain',
   maskPosition: 'center',
   maskRepeat: 'no-repeat',
-} as const;
+};
 
-// 定义网格动画颜色和配置
 const GRID_CONFIG = {
   background: {
-    color: "#7758DB", // Adapted to match Growth Hub brand color
+    color: "#7758DB",
     maxOpacity: 0.15,
     flickerChance: 0.12,
     squareSize: 4,
@@ -28,7 +27,7 @@ const GRID_CONFIG = {
     squareSize: 3,
     gridGap: 6,
   },
-} as const;
+};
 
 const FlickeringGridDemo = () => {
   return (
@@ -38,7 +37,7 @@ const FlickeringGridDemo = () => {
         <FlickeringGrid {...GRID_CONFIG.background} />
       </div>
 
-      {/* Logo mask grid — brighter, on top of background */}
+      {/* Logo mask grid — brighter, centered on top */}
       <div
         className="absolute inset-0 z-10"
         style={{
