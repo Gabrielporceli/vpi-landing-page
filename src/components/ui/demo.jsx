@@ -31,16 +31,18 @@ const GRID_CONFIG = {
 
 const FlickeringGridDemo = () => {
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0 }}>
       {/* Background grid — subtle, full coverage */}
-      <div className="absolute inset-0 z-0">
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
         <FlickeringGrid {...GRID_CONFIG.background} />
       </div>
 
       {/* Logo mask grid — brighter, centered on top */}
       <div
-        className="absolute inset-0 z-10"
         style={{
+          position: 'absolute',
+          inset: 0,
+          zIndex: 1,
           ...maskStyle,
           animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         }}

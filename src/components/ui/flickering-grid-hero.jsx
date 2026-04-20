@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export const FlickeringGrid = ({
   squareSize = 4,
@@ -150,12 +144,12 @@ export const FlickeringGrid = ({
   return (
     <div
       ref={containerRef}
-      className={`relative h-full w-full overflow-hidden${className ? ` ${className}` : ''}`}
+      style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}
       {...props}
     >
       <canvas
         ref={canvasRef}
-        className="pointer-events-none absolute inset-0 block w-full h-full"
+        style={{ pointerEvents: 'none', position: 'absolute', inset: 0, display: 'block', width: '100%', height: '100%' }}
       />
     </div>
   );

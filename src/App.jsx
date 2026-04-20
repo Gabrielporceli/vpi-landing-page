@@ -42,16 +42,23 @@ const App = () => {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
       {/* NAV */}
-      <nav className="nav">
+      <nav className="nav" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <img src={logo} alt="Logo" className="nav-logo" style={{ width: '36px', height: '36px', objectFit: 'contain', borderRadius: 0, backgroundColor: 'transparent' }} />
+        <button 
+          className="btn-primary" 
+          style={{ width: 'auto', padding: '10px 24px', fontSize: '13px', margin: 0, color: '#7758DB' }}
+          onClick={() => document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+        >
+          Entre em Contato
+        </button>
       </nav>
 
       {/* HERO WITH FLICKERING GRID LOGO MASK */}
-      <section className="relative min-h-[95vh] w-full mt-[-76px] pt-[76px] flex items-center justify-center overflow-hidden">
+      <section style={{ position: 'relative', minHeight: '95vh', width: '100%', marginTop: '-76px', paddingTop: '76px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
         <FlickeringGridDemo />
-        
+
         {/* Hero Content Overlay */}
-        <div className="absolute inset-0 z-20 pointer-events-none flex flex-col items-center justify-center">
+        <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <div className="container" style={{ textAlign: 'center' }}>
             <div className="hero-tag" style={{ justifyContent: 'center', marginBottom: '32px' }}>
               <div style={{ width: '28px', height: '0.5px', backgroundColor: '#7758DB' }} />
@@ -69,7 +76,7 @@ const App = () => {
             <p className="hero-sub" style={{ margin: '0 auto', maxWidth: '650px' }}>
               <span style={{ color: '#6A6A60' }}>Essa não é uma oferta aberta. </span>
               <span style={{ color: '#161616', fontWeight: 500 }}>É um convite exclusivo</span>
-              {' '}—{' '}
+              {' '}
               <span style={{ color: '#6A6A60' }}>feito por um cliente nosso que viu resultado e quis estender esse benefício para você.</span>
             </p>
           </div>
@@ -187,7 +194,7 @@ const App = () => {
           </div>
 
           {/* RIGHT COLUMN — FORM */}
-          <div className="sticky-col reveal reveal--scale" data-delay="3" style={{ position: 'sticky', top: '40px', alignSelf: 'start' }}>
+          <div id="contact-form" className="sticky-col reveal reveal--scale" data-delay="3" style={{ position: 'sticky', top: '100px', alignSelf: 'start' }}>
             <div style={{ background: '#161616', borderRadius: '16px', padding: '40px 36px', color: '#F4F4F4' }}>
 
               {submitted ? (

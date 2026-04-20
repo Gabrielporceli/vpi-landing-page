@@ -3,11 +3,11 @@ import logo from "../../assets/logo.png";
 
 const maskStyle = {
   WebkitMaskImage: `url('${logo}')`,
-  WebkitMaskSize: 'contain', 
+  WebkitMaskSize: '85%', 
   WebkitMaskPosition: 'center',
   WebkitMaskRepeat: 'no-repeat',
   maskImage: `url('${logo}')`,
-  maskSize: 'contain',
+  maskSize: '85%',
   maskPosition: 'center',
   maskRepeat: 'no-repeat',
 } as const;
